@@ -1,5 +1,5 @@
 import './App.css';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { InputManager } from './InputManager'
 import { defaultGameData } from './GameConsts'
 
@@ -16,13 +16,14 @@ function App() {
       return defaultGameData;
     }
   })());
+
   const [clicks, setClicks] = useState(gameData.current? gameData.current.clicks: 0);
-
-  function cookieClick() {
+  
+  const cookieClick = useCallback(() => {
     setClicks(prev=>prev+1)
-    localStorage.setItem('gameData', JSON.stringify({...gameData.current, clicks:clicks+1}));
-  }
-
+    localStorage.setItem('gameData', JSON.stringify({...gameData.current, clicks:gameData.current.clicks+1}));
+  }, [])
+ 
   function cookieDown(event) {
     event.target.style.maxHeight = "80%";
   }
@@ -37,7 +38,7 @@ function App() {
     // Create the input manager and register the f keybind
     let f = document.querySelector('img#f')
     const inputManager = new InputManager()
-
+    
     inputManager.addKeyHandler('f', (event) => {
       if (event.type === 'keyup') {
         cookieUp({});
@@ -60,7 +61,7 @@ function App() {
       document.removeEventListener('keydown', inputManager.keyHandler);
     }
 
-  }, [])
+  }, [cookieClick])
 
   return (
     <div onMouseUp={cookieUp} className="app-wrapper">
