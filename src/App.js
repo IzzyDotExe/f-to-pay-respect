@@ -1,13 +1,26 @@
 import './App.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { InputManager } from './InputManager'
+import { defaultGameData } from './GameConsts'
 
 function App() {
 
-  const [clicks, setClicks] = useState(0);
+  const gameData = useRef((() => {
+    // Handle corrupted data, if we get an error just reset everything
+    // Also serves to initialize the saved gameData on first play
+    try {
+      return JSON.parse(localStorage.getItem('gameData'));
+    } catch (e) {
+      console.log(e)
+      localStorage.setItem('gameData', JSON.stringify(defaultGameData))
+      return defaultGameData;
+    }
+  })());
+  const [clicks, setClicks] = useState(gameData.current? gameData.current.clicks: 0);
 
   function cookieClick() {
     setClicks(prev=>prev+1)
+    localStorage.setItem('gameData', JSON.stringify({...gameData.current, clicks:clicks+1}));
   }
 
   function cookieDown(event) {
@@ -21,8 +34,10 @@ function App() {
 
   useEffect(() => {
 
+    // Create the input manager and register the f keybind
     let f = document.querySelector('img#f')
     const inputManager = new InputManager()
+
     inputManager.addKeyHandler('f', (event) => {
       if (event.type === 'keyup') {
         cookieUp({});
@@ -34,9 +49,13 @@ function App() {
       }
     })
 
+    // Setup input using inputManager
     document.addEventListener('keyup', inputManager.keyHandler);
     document.addEventListener('keydown', inputManager.keyHandler);
+
     return () => {
+
+      // Cleanup for input 
       document.removeEventListener('keyup', inputManager.keyHandler);
       document.removeEventListener('keydown', inputManager.keyHandler);
     }
