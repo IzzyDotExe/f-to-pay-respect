@@ -19,10 +19,15 @@ function App() {
 
   const [clicks, setClicks] = useState(gameData.current? gameData.current.clicks: 0);
   
-  const cookieClick = useCallback(() => {
-    setClicks(prev=>prev+1)
-    localStorage.setItem('gameData', JSON.stringify({...gameData.current, clicks:gameData.current.clicks+1}));
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const cookieClick = useCallback((() => {
+    let lastClicks = gameData.current.clicks
+    return () => {
+      setClicks((prev) => prev+1)
+      lastClicks += 1;
+      localStorage.setItem('gameData', JSON.stringify({...gameData.current, clicks:lastClicks}));
+    }
+  })(), []);
  
   function cookieDown(event) {
     event.target.style.maxHeight = "80%";
@@ -38,7 +43,7 @@ function App() {
     // Create the input manager and register the f keybind
     let f = document.querySelector('img#f')
     const inputManager = new InputManager()
-    
+
     inputManager.addKeyHandler('f', (event) => {
       if (event.type === 'keyup') {
         cookieUp({});
